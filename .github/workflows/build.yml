@@ -87,6 +87,10 @@ jobs:
     # burning CI minutes rebuilding from source every day.
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    # Real build time is 30-60+ min; cap well above that instead of relying
+    # on GitHub's 360-minute default, so a hang (e.g. a stalled fetch) fails
+    # fast rather than sitting "running" for up to 6 hours.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 

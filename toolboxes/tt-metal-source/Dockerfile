@@ -37,17 +37,33 @@ RUN git clone --recurse-submodules --branch ${TT_METAL_REF} --depth 1 \
         && git checkout ${TT_METAL_REF} \
         && git submodule update --init --recursive)
 
-# Host build dependencies (installs system packages tt-metal needs to compile)
-RUN ./install_dependencies.sh || true
+# Host build dependencies (installs system packages tt-metal needs to compile).
+# DEBIAN_FRONTEND=noninteractive (set above) is a Docker ENV, so it covers
+# every apt-get call this script makes, not just the base image's own. The
+# script itself also passes -y/-f to every apt-get/dpkg call it runs, so
+# there's nothing here that can block on a prompt.
+RUN echo "==> [1/4] Installing host build dependencies (install_dependencies.sh)" \
+    && (./install_dependencies.sh || true) \
+    && echo "==> [1/4] Done"
 
-# Build (Option A from INSTALLING.md — recommended build script)
-RUN ./build_metal.sh
+# Build (Option A from INSTALLING.md — recommended build script). build_metal.sh
+# doesn't expose its own --verbose flag, but its underlying CMake-generated
+# Ninja build honors the VERBOSE env var, printing each compile/link command
+# instead of just a progress bar — so a hang and a slow build don't look the
+# same in the Action log.
+RUN echo "==> [2/4] Building tt-metal (build_metal.sh, this takes 30-60+ min)" \
+    && VERBOSE=1 ./build_metal.sh \
+    && echo "==> [2/4] Done"
 
 # Python environment for model demos
-RUN ./create_venv.sh
+RUN echo "==> [3/4] Creating Python venv (create_venv.sh)" \
+    && ./create_venv.sh \
+    && echo "==> [3/4] Done"
 ENV PYTHONPATH=/tt-metal
 ENV PATH="/tt-metal/python_env/bin:${PATH}"
 
-RUN pip install --no-cache-dir -r tt_metal/python_env/requirements-dev.txt || true
+RUN echo "==> [4/4] Installing model-demo Python requirements" \
+    && (pip install --no-cache-dir -r tt_metal/python_env/requirements-dev.txt || true) \
+    && echo "==> [4/4] Done"
 
 CMD ["/bin/bash"]
