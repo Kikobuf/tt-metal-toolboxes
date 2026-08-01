@@ -18,7 +18,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_BASE: ghcr.io/${{ github.repository_owner }}/tt-metal-toolboxes
+  IMAGE_BASE: ghcr.io/kikobuf/tt-metal-toolboxes
 
 jobs:
   check-latest-release:
