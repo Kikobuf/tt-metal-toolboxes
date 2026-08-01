@@ -9,12 +9,16 @@ on:
       tt_metal_ref:
         description: "tt-metal git ref / release tag to build (e.g. v0.67.4)"
         required: false
-        default: "latest"
+        default: "main"
   push:
     branches: [main]
     paths:
       - "toolboxes/**"
       - ".github/workflows/build.yml"
+
+permissions:
+  contents: read
+  packages: write
 
 env:
   REGISTRY: ghcr.io
